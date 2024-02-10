@@ -4,6 +4,8 @@
 
 from decimal import ROUND_HALF_UP, Decimal
 
+from tabulate import tabulate
+
 from collectors.models import LocationInfoDTO
 
 
@@ -21,22 +23,52 @@ class Renderer:
 
         self.location_info = location_info
 
-    async def render(self) -> tuple[str, ...]:
+    async def render(self) -> str:
         """
         Форматирование прочитанных данных.
 
         :return: Результат форматирования
         """
 
-        return (
-            f"Страна: {self.location_info.location.name}",
-            f"Столица: {self.location_info.location.capital}",
-            f"Регион: {self.location_info.location.subregion}",
-            f"Языки: {await self._format_languages()}",
-            f"Население страны: {await self._format_population()} чел.",
-            f"Курсы валют: {await self._format_currency_rates()}",
-            f"Погода: {self.location_info.weather.temp} °C",
-        )
+        location = [
+            ["Страна", self.location_info.location.name],
+            ["Регион", self.location_info.location.subregion],
+            ["Языки", await self._format_languages()],
+            ["Население страны", f"{await self._format_population()} чел."],
+            ["Площадь", f"{self.location_info.location.area} кв. км."],
+            ["Курсы валют", await self._format_currency_rates()],
+        ]
+
+        capital = [
+            ["Столица", self.location_info.location.capital],
+            ["Широта", self.location_info.location.latitude],
+            ["Долгота", self.location_info.location.longitude],
+        ]
+
+        weather = [
+            ["Время получения данных", f"{self.location_info.weather.date_time}"],
+            ["Температура", f"{self.location_info.weather.temp} °C"],
+            ["Давление", f"{self.location_info.weather.pressure}"],
+            ["Видимость", f"{self.location_info.weather.visibility}"],
+            ["Скорость ветра", f"{self.location_info.weather.wind_speed}"],
+            ["Влажность", f"{self.location_info.weather.humidity}"],
+        ]
+
+        news = []
+        for n in self.location_info.news:
+            news.append(
+                [n.source, n.author or "", n.published_at, n.title, n.description]
+            )
+
+        headers = ["Источник", "Автор", "Дата публикации", "Название", "Описание"]
+
+        news_table = tabulate(news, headers=headers, tablefmt="grid")
+
+        location_table = tabulate(location, tablefmt="grid")
+        capital_table = tabulate(capital, tablefmt="grid")
+        weather_table = tabulate(weather, tablefmt="grid")
+
+        return location_table, capital_table, weather_table, news_table
 
     async def _format_languages(self) -> str:
         """
