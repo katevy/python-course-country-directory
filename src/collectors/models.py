@@ -1,6 +1,8 @@
 """
 Описание моделей данных (DTO).
 """
+from datetime import datetime
+from typing import Optional
 
 from pydantic import Field, BaseModel
 
@@ -21,11 +23,13 @@ class LocationDTO(HashableBaseModel):
     .. code-block::
 
         LocationDTO(
+            name="",
             capital="Mariehamn",
             alpha2code="AX",
         )
     """
 
+    country: str
     capital: str
     alpha2code: str = Field(min_length=2, max_length=2)  # country alpha‑2 code
 
@@ -93,6 +97,9 @@ class CountryDTO(BaseModel):
             timezones=[
                 "UTC+02:00",
             ],
+            latitude=10.0,
+            longitude=10.0,
+            area=1580.0
         )
     """
 
@@ -106,6 +113,9 @@ class CountryDTO(BaseModel):
     population: int
     subregion: str
     timezones: list[str]
+    latitude: float
+    longitude: float
+    area: Optional[float]
 
 
 class CurrencyRatesDTO(BaseModel):
@@ -147,6 +157,29 @@ class WeatherInfoDTO(BaseModel):
     pressure: int
     humidity: int
     wind_speed: float
+    description: str
+    date_time: datetime
+    timezone: int
+    visibility: int
+
+
+class NewsDTO(BaseModel):
+    """
+    Модель данных для представления информации о новостях.
+    .. code-block::
+        NewsDTO(
+            source="Wired",
+            author="Eliza Gkritsi",
+            published_at=2024-01-12T12:42:24Z,
+            title="Politicians claim the move could provide vital minerals for the green transition. Critics say opening
+            up exploration creates geopolitical headaches and is environmentally unsound"
+        )
+    """
+
+    source: str
+    author: Optional[str]
+    published_at: datetime
+    title: str
     description: str
 
 
@@ -195,9 +228,17 @@ class LocationInfoDTO(BaseModel):
             currency_rates={
                 "EUR": 0.016503,
             },
+            news=[{
+             source="Wired",
+            author="Eliza Gkritsi",
+            published_at=2024-01-12T12:42:24Z,
+            title="Politicians claim the move could provide vital minerals for the green transition. Critics say opening
+            up exploration creates geopolitical headaches and is environmentally unsound"
+            }]
         )
     """
 
     location: CountryDTO
     weather: WeatherInfoDTO
     currency_rates: dict[str, float]
+    news: list[NewsDTO]
